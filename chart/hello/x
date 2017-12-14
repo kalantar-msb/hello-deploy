@@ -1,0 +1,158 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: 2017-12-11T20:36:14Z
+  generation: 1
+  labels:
+    app: msb-ibm-microservicebuilder-pipeline
+    chart: ibm-microservicebuilder-pipeline-2.0.2
+    component: msb-jenkins-master
+    heritage: Tiller
+    release: msb
+  name: msb-ibm-microservicebuilder-pipeline
+  namespace: default
+  resourceVersion: "2722633"
+  selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/msb-ibm-microservicebuilder-pipeline
+  uid: ee8a50b3-deb2-11e7-aa75-fa163e67e24f
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: msb-jenkins-master
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        chart: ibm-microservicebuilder-pipeline-2.0.2
+        component: msb-jenkins-master
+        heritage: Tiller
+        release: msb
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -Xmx512m -Dfile.encoding=UTF-8 -Dhudson.security.ArtifactsPermission=true
+        - name: PIPELINE_TEMPLATE_LOCATION
+          value: https://github.com/WASdev/microservicebuilder.lib.git
+        - name: PIPELINE_TEMPLATE_DEFAULT_VERSION
+          value: 2.0.0
+        - name: REGISTRY
+          value: http://9.37.239.60:8500/default
+        - name: REGISTRY_SECRET
+          value: admin.registrykey
+        - name: BUILD
+          value: "true"
+        - name: CHART_FOLDER
+          value: chart
+        - name: MANIFEST_FOLDER
+          value: manifests
+        - name: DEPLOY
+          value: "true"
+        - name: TEST
+          value: "true"
+        - name: DEBUG
+          value: "false"
+        - name: DEFAULT_DEPLOY_BRANCH
+          value: master
+        - name: GITHUB_URL
+          value: https://github.com
+        - name: GITHUB_NAME
+          value: GitHub
+        - name: GITHUB_OAUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: oauth-token
+              name: msb-ibm-microservicebuilder-pipeline-github-secrets
+        - name: GITHUB_OAUTH_USER
+          value: kalantar
+        - name: GITHUB_APP_ID
+          valueFrom:
+            secretKeyRef:
+              key: app-id
+              name: msb-ibm-microservicebuilder-pipeline-github-secrets
+        - name: GITHUB_APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: app-secret
+              name: msb-ibm-microservicebuilder-pipeline-github-secrets
+        - name: GITHUB_ADMINS
+          value: kalantar
+        - name: GITHUB_ORGS
+          value: kalantar-msb
+        - name: GITHUB_REPO_PATTERN
+          value: .*
+        - name: NAMESPACE
+          value: default
+        - name: LIBERTY_LICENSE_JAR_BASE_URL
+        - name: LIBERTY_LICENSE_JAR_NAME
+          value: wlp-core-license.jar
+        image: ibmcom/mb-jenkins:2.0.0
+        imagePullPolicy: Always
+        name: msb-ibm-microservicebuilder-pipeline
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 50000
+          name: slavelistener
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/jenkins_home
+          name: jenkins-home
+        - mountPath: /var/jenkins_config
+          name: jenkins-config
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - /var/jenkins_config/apply_config.sh
+        image: ibmcom/mb-jenkins:2.0.0
+        imagePullPolicy: Always
+        name: copy-default-config
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/jenkins_config
+          name: jenkins-config
+        - mountPath: /var/jenkins_home
+          name: jenkins-home
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsUser: 0
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: msb-ibm-microservicebuilder-pipeline
+        name: jenkins-config
+      - emptyDir: {}
+        name: jenkins-home
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2017-12-11T20:36:15Z
+    lastUpdateTime: 2017-12-11T20:36:15Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
